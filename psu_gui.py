@@ -24,19 +24,19 @@ class PowerSupplyGUI:
 
     def build_gui(self):
 
-        tk.Label(self.root, text="Select PSU:").grid(row=0, column=0)
-        tk.Label(self.root, text="Channel").grid(row=0, column=1)
-        tk.Label(self.root, text="Voltage (V)").grid(row=0, column=2)
-        tk.Label(self.root, text="Current (A)").grid(row=0, column=3)
+        tk.Label(self.root, text="Select PSU:").grid(row=0, column=1)
+        tk.Label(self.root, text="Channel").grid(row=0, column=2)
+        tk.Label(self.root, text="Voltage (V)").grid(row=1, column=1)
+        tk.Label(self.root, text="Current (A)").grid(row=1, column=2)
 
         self.voltage_entries = {}
         self.current_entries = {}
         for ch in [1, 2]:
-            tk.Label(self.root, text=f"CH{ch}").grid(row=ch, column=0)
+            tk.Label(self.root, text=f"CH{ch}").grid(row=ch+1, column=0)
             self.voltage_entries[ch] = tk.Entry(self.root)
             self.current_entries[ch] = tk.Entry(self.root)
-            self.voltage_entries[ch].grid(row=ch, column=1)
-            self.current_entries[ch].grid(row=ch, column=2)
+            self.voltage_entries[ch].grid(row=ch+1, column=1)
+            self.current_entries[ch].grid(row=ch+1, column=2)
 
         self.output_buttons = {}
         for ch in [1]:
@@ -50,8 +50,8 @@ class PowerSupplyGUI:
          self.output_buttons[ch] = btn
 
         tk.OptionMenu(self.root, self.selected_psu_name, *self.psus.keys()).grid(row=0, column=1, columnspan=2)
-        tk.Button(self.root, text="Apply Settings", command=self.apply_settings).grid(row=3, column=2, columnspan=2)
-        tk.Button(self.root, text="Read Values", command=self.read_values).grid(row=3, column=0, columnspan=2)
+        tk.Button(self.root, text="Apply Settings", command=self.apply_settings).grid(row=4, column=2, columnspan=2)
+        tk.Button(self.root, text="Read Values", command=self.read_values).grid(row=4, column=0, columnspan=2)
 
         tk.Button(self.root, text="Connect", command=self.connect).grid(row=6, column=0, columnspan=2)
         tk.Button(self.root, text="Disconnect", command=self.disconnect).grid(row=6, column=2, columnspan=2)
@@ -118,8 +118,8 @@ def main():
 
     # ✅ Define the psus dictionary
     psus = {
-        "PSU 1": psuL,
-        "PSU 2": psuR
+        "PSU Left": psuL,
+        "PSU Right": psuR
     }
 
     # ✅ Now pass it into the GUI
