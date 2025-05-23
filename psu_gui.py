@@ -3,7 +3,7 @@ from tkinter import messagebox
 from cpx400dp import CPX400DP
 
 psuL = CPX400DP("192.168.0.103")
-psuR = CPX400DP("192.168.0.102")
+psuR = CPX400DP("192.168.0.105")
 
 class PowerSupplyGUI:
     def __init__(self, root, psus: dict):
@@ -117,8 +117,8 @@ def main():
     root = tk.Tk()
 
     # Create PSU instances (use actual IPs or mock)
-    psuL = CPX400DP("192.168.0.101")
-    psuR = CPX400DP("192.168.0.102")
+    psuL = CPX400DP("192.168.0.103")
+    psuR = CPX400DP("192.168.0.105")
 
     # ✅ Define the psus dictionary
     psus = {
