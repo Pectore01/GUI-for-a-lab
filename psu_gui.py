@@ -23,10 +23,6 @@ class PowerSupplyGUI:
         self.switch_psu()  # Initialize selection
 
     def build_gui(self):
-        self.psus = {"PSU left": psuL, "PSU right": psuR}
-        self.selected_psu_name = tk.StringVar()
-        self.selected_psu_name.set("PSU 1")
-        self.selected_psu_name.trace("w", self.switch_psu)
 
         tk.Label(self.root, text="Select PSU:").grid(row=0, column=0)
         tk.Label(self.root, text="Channel").grid(row=0, column=1)
