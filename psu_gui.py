@@ -25,7 +25,7 @@ class PowerSupplyGUI:
     def build_gui(self):
 
         tk.Label(self.root, text="Select PSU:").grid(row=0, column=1)
-        tk.Label(self.root, text="Channel").grid(row=0, column=2)
+        tk.Label(self.root, text="Channel").grid(row=1, column=0)
         tk.Label(self.root, text="Voltage (V)").grid(row=1, column=1)
         tk.Label(self.root, text="Current (A)").grid(row=1, column=2)
 
@@ -49,7 +49,7 @@ class PowerSupplyGUI:
          btn.grid(row=5, column=0 + ch, columnspan=2, pady=5)
          self.output_buttons[ch] = btn
 
-        tk.OptionMenu(self.root, self.selected_psu_name, *self.psus.keys()).grid(row=0, column=1, columnspan=2)
+        tk.OptionMenu(self.root, self.selected_psu_name, *self.psus.keys()).grid(row=0, column=2, columnspan=1)
         tk.Button(self.root, text="Apply Settings", command=self.apply_settings).grid(row=4, column=2, columnspan=2)
         tk.Button(self.root, text="Read Values", command=self.read_values).grid(row=4, column=0, columnspan=2)
 
