@@ -29,6 +29,9 @@ class DMM6500:
 
     def read_resistance(self):
         return float(self.query("MEAS:RES?"))
+    
+    def read_continuity(self):
+        return float(self.query("MEAS:CONT?"))
 
     def close(self):
         if self.sock:

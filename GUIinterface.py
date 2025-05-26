@@ -3,10 +3,7 @@ from tkinter import messagebox
 from cpx400dp import CPX400DP
 from keithleyDMM6500 import DMM6500
 
-psuL = CPX400DP("192.168.0.103")
-psuR = CPX400DP("192.168.0.105")
-
-class PowerSupplyGUI:
+class GUI:
     def __init__(self, root, psus: dict, dmm_ip: str = None):
         self.root = root
         self.psus = psus  # Dictionary of PSUs, e.g., {"PSU 1": psu1, "PSU 2": psu2}
@@ -86,7 +83,7 @@ class PowerSupplyGUI:
 
         # Measurement mode selector
         tk.Label(self.root, text="Measure:").grid(row=9, column=0)
-        measure_options = ["Voltage", "Current", "Resistance"]
+        measure_options = ["Voltage", "Current", "Resistance", "Continuity"]
         tk.OptionMenu(self.root, self.dmm_measure_mode, *measure_options).grid(row=9, column=1)
 
         # Display label for measurement result
@@ -171,27 +168,9 @@ class PowerSupplyGUI:
                 elif mode == "Resistance":
                     val = self.dmm.read_resistance()
                     self.dmm_measurement_var.set(f"{val:.2f} Ω")
+                elif mode == "Continuity":
+                    val = self.dmm.read_continuity()
+                    self.dmm_measurement_var.set(f"{val:.2f} Ω (cont)")
             except Exception as e:
                 self.status_var.set(f"DMM Error: {e}")
         self.root.after(1000, self.update_dmm_readings)
-
-
-def main():
-    root = tk.Tk()
-
-    # Create PSU instances (use actual IPs or mock)
-    psuL = CPX400DP("192.168.0.103")
-    psuR = CPX400DP("192.168.0.105")
-    dmm_ip = "192.168.0.104"
-    # ✅ Define the psus dictionary
-    psus = {
-        "PSU Left": psuL,
-        "PSU Right": psuR
-    }
-
-    # ✅ Now pass it into the GUI
-    app = PowerSupplyGUI(root, psus, dmm_ip=dmm_ip)
-    root.mainloop()
-
-if __name__ == "__main__":
-    main()
