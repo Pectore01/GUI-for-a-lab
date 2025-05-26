@@ -88,7 +88,8 @@ class GUI:
 
         # Display label for measurement result
         self.dmm_measurement_var = tk.StringVar(value="--")
-        tk.Label(self.root, textvariable=self.dmm_measurement_var, font=("Arial", 12)).grid(row=10, column=0, columnspan=2, pady=(5,0))
+        self.dmm_measurement_label = tk.Label(self.root, textvariable=self.dmm_measurement_var, font=("Arial", 12))
+        self.dmm_measurement_label.grid(row=10, column=0, columnspan=2, pady=(5, 0))
 
     def connect(self):
         try:
@@ -153,12 +154,13 @@ class GUI:
                 self.status_var.set(f"Error reading PSU: {e}")
 
         # Schedule next update
-        self.root.after(1000, self.update_live_readings)  # Update every second
+        self.root.after(5000, self.update_live_readings)  # Update every 5 seconds
     
     def update_dmm_readings(self):
         if self.dmm:
             try:
                 mode = self.dmm_measure_mode.get()
+                self.dmm_measurement_label.config(fg="black")
                 if mode == "Voltage":
                     val = self.dmm.read_voltage()
                     self.dmm_measurement_var.set(f"{val:.5f} V")
@@ -170,7 +172,12 @@ class GUI:
                     self.dmm_measurement_var.set(f"{val:.2f} Ω")
                 elif mode == "Continuity":
                     val = self.dmm.read_continuity()
-                    self.dmm_measurement_var.set(f"{val:.2f} Ω (cont)")
+                    if val < 10:
+                        self.dmm_measurement_var.set(f"Closed ({val:.2f} Ω)")
+                        self.dmm_measurement_label.config(fg="green")
+                    else:
+                        self.dmm_measurement_var.set(f"Open ({val:.2f} Ω)")
+                        self.dmm_measurement_label.config(fg="red")
             except Exception as e:
                 self.status_var.set(f"DMM Error: {e}")
         self.root.after(1000, self.update_dmm_readings)
