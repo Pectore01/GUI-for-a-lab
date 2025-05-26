@@ -20,6 +20,7 @@ class PowerSupplyGUI:
         self.status_var.set("Select a power supply.")
 
         self.build_gui()
+        self.update_live_readings()
         self.switch_psu()  # Initialize selection
 
     def build_gui(self):
@@ -28,6 +29,18 @@ class PowerSupplyGUI:
         tk.Label(self.root, text="Channel").grid(row=1, column=0)
         tk.Label(self.root, text="Voltage (V)").grid(row=1, column=1)
         tk.Label(self.root, text="Current (A)").grid(row=1, column=2)
+
+        self.live_voltage_labels = {}
+        self.live_current_labels = {}
+
+        for ch in [1, 2]:
+            self.live_voltage_labels[ch] = tk.Label(self.root, text="0.00 V", fg="blue")
+            self.live_current_labels[ch] = tk.Label(self.root, text="0.00 A", fg="blue")
+            self.live_voltage_labels[ch].grid(row=ch + 1, column=3)
+            self.live_current_labels[ch].grid(row=ch + 1, column=4)
+
+        tk.Label(self.root, text="Live Voltage").grid(row=1, column=3)
+        tk.Label(self.root, text="Live Current").grid(row=1, column=4)
 
         self.voltage_entries = {}
         self.current_entries = {}
@@ -107,6 +120,21 @@ class PowerSupplyGUI:
         self.psu = self.psus[selected_name]
         self.status_var.set(f"Selected {self.psu.name}")
         self.root.title(f"Power Supply Control - {self.psu.name}")
+
+    def update_live_readings(self):
+        if self.psu is not None:
+            try:
+                for ch in [1, 2]:
+                    voltage = self.psu.read_voltage(ch)
+                    current = self.psu.read_current(ch)
+                    self.live_voltage_labels[ch].config(text=f"{voltage:} V")
+                    self.live_current_labels[ch].config(text=f"{current:} A")
+            except Exception as e:
+                # Show error only once or log it, otherwise it will spam the GUI.
+                self.status_var.set(f"Error reading PSU: {e}")
+
+        # Schedule next update
+        self.root.after(1000, self.update_live_readings)  # Update every second
 
 
 def main():
