@@ -1,16 +1,17 @@
 import tkinter as tk
 from tkinter import messagebox
 from cpx400dp import CPX400DP
+from keithleyDMM6500 import DMM6500
 
 psuL = CPX400DP("192.168.0.103")
 psuR = CPX400DP("192.168.0.105")
 
 class PowerSupplyGUI:
-    def __init__(self, root, psus: dict):
+    def __init__(self, root, psus: dict, dmm_ip: str = None):
         self.root = root
         self.psus = psus  # Dictionary of PSUs, e.g., {"PSU 1": psu1, "PSU 2": psu2}
         self.psu = None
-        self.root.title("Power Supply Control")
+        self.root.title("Power Supply Control") 
 
         self.selected_psu_name = tk.StringVar()
         self.selected_psu_name.set(next(iter(psus)))  # Default to first PSU
@@ -22,6 +23,13 @@ class PowerSupplyGUI:
         self.build_gui()
         self.update_live_readings()
         self.switch_psu()  # Initialize selection
+
+        if dmm_ip:
+            try:
+                self.dmm = DMM6500(dmm_ip)
+                self.update_dmm_readings()
+            except Exception as e:
+                self.status_var.set(f"Failed to connect to DMM: {e}")
 
     def build_gui(self):
 
@@ -70,6 +78,19 @@ class PowerSupplyGUI:
         tk.Button(self.root, text="Disconnect", command=self.disconnect).grid(row=6, column=2, columnspan=2)
 
         tk.Label(self.root, textvariable=self.status_var).grid(row=7, column=0, columnspan=3)
+
+        tk.Label(self.root, text="Keithley DMM6500 Readings", font=("Arial", 10, "bold")).grid(row=8, column=0, columnspan=3, pady=(10, 0))
+        tk.Label(self.root, text="Voltage:").grid(row=9, column=0)
+        tk.Label(self.root, text="Current:").grid(row=10, column=0)
+        tk.Label(self.root, text="Resistance:").grid(row=11, column=0)
+
+        self.dmm_voltage_var = tk.StringVar(value="--")
+        self.dmm_current_var = tk.StringVar(value="--")
+        self.dmm_resistance_var = tk.StringVar(value="--")
+
+        tk.Label(self.root, textvariable=self.dmm_voltage_var).grid(row=9, column=1)
+        tk.Label(self.root, textvariable=self.dmm_current_var).grid(row=10, column=1)
+        tk.Label(self.root, textvariable=self.dmm_resistance_var).grid(row=11, column=1)
 
     def connect(self):
         try:
@@ -135,6 +156,16 @@ class PowerSupplyGUI:
 
         # Schedule next update
         self.root.after(1000, self.update_live_readings)  # Update every second
+    
+    def update_dmm_readings(self):
+        if self.dmm:
+            try:
+                self.dmm_voltage_var.set(f"{self.dmm.read_voltage():.5f} V")
+                self.dmm_current_var.set(f"{self.dmm.read_current():.6f} A")
+                self.dmm_resistance_var.set(f"{self.dmm.read_resistance():.2f} Ω")
+            except Exception as e:
+                self.status_var.set(f"DMM Error: {e}")
+        self.root.after(1000, self.update_dmm_readings)
 
 
 def main():
@@ -143,7 +174,7 @@ def main():
     # Create PSU instances (use actual IPs or mock)
     psuL = CPX400DP("192.168.0.103")
     psuR = CPX400DP("192.168.0.105")
-
+    dmm_ip = "192.168.0.104"
     # ✅ Define the psus dictionary
     psus = {
         "PSU Left": psuL,
@@ -151,7 +182,7 @@ def main():
     }
 
     # ✅ Now pass it into the GUI
-    app = PowerSupplyGUI(root, psus)
+    app = PowerSupplyGUI(root, psus, dmm_ip=dmm_ip)
     root.mainloop()
 
 if __name__ == "__main__":
