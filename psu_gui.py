@@ -20,6 +20,9 @@ class PowerSupplyGUI:
         self.status_var = tk.StringVar()
         self.status_var.set("Select a power supply.")
 
+        self.dmm_measure_mode = tk.StringVar(value="Voltage")
+
+
         self.build_gui()
         self.update_live_readings()
         self.switch_psu()  # Initialize selection
@@ -80,17 +83,15 @@ class PowerSupplyGUI:
         tk.Label(self.root, textvariable=self.status_var).grid(row=7, column=0, columnspan=3)
 
         tk.Label(self.root, text="Keithley DMM6500 Readings", font=("Arial", 10, "bold")).grid(row=8, column=0, columnspan=3, pady=(10, 0))
-        tk.Label(self.root, text="Voltage:").grid(row=9, column=0)
-        tk.Label(self.root, text="Current:").grid(row=10, column=0)
-        tk.Label(self.root, text="Resistance:").grid(row=11, column=0)
 
-        self.dmm_voltage_var = tk.StringVar(value="--")
-        self.dmm_current_var = tk.StringVar(value="--")
-        self.dmm_resistance_var = tk.StringVar(value="--")
+        # Measurement mode selector
+        tk.Label(self.root, text="Measure:").grid(row=9, column=0)
+        measure_options = ["Voltage", "Current", "Resistance"]
+        tk.OptionMenu(self.root, self.dmm_measure_mode, *measure_options).grid(row=9, column=1)
 
-        tk.Label(self.root, textvariable=self.dmm_voltage_var).grid(row=9, column=1)
-        tk.Label(self.root, textvariable=self.dmm_current_var).grid(row=10, column=1)
-        tk.Label(self.root, textvariable=self.dmm_resistance_var).grid(row=11, column=1)
+        # Display label for measurement result
+        self.dmm_measurement_var = tk.StringVar(value="--")
+        tk.Label(self.root, textvariable=self.dmm_measurement_var, font=("Arial", 12)).grid(row=10, column=0, columnspan=2, pady=(5,0))
 
     def connect(self):
         try:
@@ -160,9 +161,16 @@ class PowerSupplyGUI:
     def update_dmm_readings(self):
         if self.dmm:
             try:
-                self.dmm_voltage_var.set(f"{self.dmm.read_voltage():.5f} V")
-                self.dmm_current_var.set(f"{self.dmm.read_current():.6f} A")
-                self.dmm_resistance_var.set(f"{self.dmm.read_resistance():.2f} Ω")
+                mode = self.dmm_measure_mode.get()
+                if mode == "Voltage":
+                    val = self.dmm.read_voltage()
+                    self.dmm_measurement_var.set(f"{val:.5f} V")
+                elif mode == "Current":
+                    val = self.dmm.read_current()
+                    self.dmm_measurement_var.set(f"{val:.6f} A")
+                elif mode == "Resistance":
+                    val = self.dmm.read_resistance()
+                    self.dmm_measurement_var.set(f"{val:.2f} Ω")
             except Exception as e:
                 self.status_var.set(f"DMM Error: {e}")
         self.root.after(1000, self.update_dmm_readings)
