@@ -73,8 +73,7 @@ class GUI:
             btn.config(state="disabled")
             self.output_buttons[ch] = btn
 
-        self.psu_menu = tk.OptionMenu(self.root, self.selected_psu_name, *self.psus.keys())
-        self.psu_menu.grid(row=0, column=2, columnspan=1, sticky="snew", padx=5, pady=5)
+        tk.OptionMenu(self.root, self.selected_psu_name, *self.psus.keys()).grid(row=0, column=2, sticky="snew", padx=5, pady=5)
         tk.Button(self.root, text="Apply Settings", command=self.apply_settings).grid(row=4, column=2, columnspan=2, sticky="snew", padx=5, pady=5)
         tk.Button(self.root, text="Read Values", command=self.read_values).grid(row=4, column=0, columnspan=2, sticky="snew", padx=5, pady=5)
 
@@ -87,14 +86,11 @@ class GUI:
 
         tk.Label(self.root, text="Measure:").grid(row=9, column=0, sticky="snew", padx=5, pady=5)
         measure_options = ["Voltage", "Resistance", "Continuity"]  # Add "Current" if supported
-        self.dmm_mode_menu = tk.OptionMenu(self.root, self.dmm_measure_mode, *measure_options)
-        self.dmm_mode_menu.grid(row=9, column=1, sticky="snew", padx=5, pady=5)
+        tk.OptionMenu(self.root, self.dmm_measure_mode, *measure_options).grid(row=9, column=1, sticky="snew", padx=5, pady=5)
 
         self.dmm_measurement_var = tk.StringVar(value="--")
         self.dmm_measurement_label = tk.Label(self.root, textvariable=self.dmm_measurement_var, font=("Arial", 12))
         self.dmm_measurement_label.grid(row=10, column=0, columnspan=2, pady=(5, 0), sticky="snew", padx=5)
-        self.root.columnconfigure(1, weight=1)
-        self.root.columnconfigure(2, weight=1)
 
         # Allow column expansion
         for i in range(5):  # Adjust based on the number of columns used
