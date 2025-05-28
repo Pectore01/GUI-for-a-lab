@@ -44,13 +44,13 @@ class GUI:
         # DMM controls under PSU panels
         row = 1
         tk.Label(self.root, text="Keithley DMM6500 Readings", font=("Arial", 10, "bold")).grid(row=row, column=0, columnspan=2, pady=(10, 0), sticky="ew", padx=5)
-        row += 1
-        tk.Label(self.root, text="Measure:").grid(row=row, column=0, sticky="ew", padx=5, pady=5)
+        row += 2
+        tk.Label(self.root, text="Measure:").grid(row=row, column=0, sticky="nsew", padx=5, pady=5)
         measure_options = ["Voltage", "Resistance", "Continuity"]  # Add Current if supported
-        tk.OptionMenu(self.root, self.dmm_measure_mode, *measure_options).grid(row=row, column=1, sticky="ew", padx=5, pady=5)
+        tk.OptionMenu(self.root, self.dmm_measure_mode, *measure_options).grid(row=row, column=1, sticky="nsew", padx=5, pady=5)
         row += 1
         self.dmm_measurement_label = tk.Label(self.root, textvariable=self.dmm_measurement_var, font=("Arial", 12))
-        self.dmm_measurement_label.grid(row=row, column=0, columnspan=2, pady=(5, 0), sticky="ew", padx=5)
+        self.dmm_measurement_label.grid(row=row, column=0, columnspan=2, pady=(5, 0), sticky="nsew", padx=5)
 
         # Configure columns and rows for DMM
         self.root.columnconfigure(0, weight=1)

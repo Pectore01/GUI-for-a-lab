@@ -17,29 +17,29 @@ class PSUControlPanel:
         self.output_buttons = {}
 
         # Headers
-        tk.Label(self.frame, text="Channel").grid(row=0, column=0, padx=5, pady=5)
-        tk.Label(self.frame, text="Voltage (V)").grid(row=0, column=1, padx=5, pady=5)
-        tk.Label(self.frame, text="Current (A)").grid(row=0, column=2, padx=5, pady=5)
-        tk.Label(self.frame, text="Live Voltage").grid(row=0, column=3, padx=5, pady=5)
-        tk.Label(self.frame, text="Live Current").grid(row=0, column=4, padx=5, pady=5)
+        tk.Label(self.frame, text="Channel").grid(row=0, column=0, padx=5, pady=5, sticky="snew")
+        tk.Label(self.frame, text="Voltage (V)").grid(row=0, column=1, padx=5, pady=5, sticky="snew")
+        tk.Label(self.frame, text="Current (A)").grid(row=0, column=3, columnspan=2, padx=5, pady=5, sticky="snew")
+        tk.Label(self.frame, text="Live Voltage").grid(row=0, column=5, padx=5, pady=5, sticky="snew")
+        tk.Label(self.frame, text="Live Current").grid(row=0, column=6, padx=5, pady=5, sticky="snew")
 
         for ch in [1]:
-            tk.Label(self.frame, text=f"CH{ch}").grid(row=ch, column=0, padx=5, pady=5)
+            tk.Label(self.frame, text=f"CH{ch}").grid(row=ch, column=0, padx=5, pady=5, sticky="snew")
 
             ve = tk.Entry(self.frame, width=8)
-            ve.grid(row=ch, column=1, padx=5, pady=5)
+            ve.grid(row=ch, column=1, columnspan=2, padx=5, pady=5, sticky="snew")
             self.voltage_entries[ch] = ve
 
             ce = tk.Entry(self.frame, width=8)
-            ce.grid(row=ch, column=2, padx=5, pady=5)
+            ce.grid(row=ch, column=3, columnspan=2, padx=5, pady=5, sticky="snew")
             self.current_entries[ch] = ce
 
             lv = tk.Label(self.frame, text="0.00 V", fg="blue")
-            lv.grid(row=ch, column=3, padx=5, pady=5)
+            lv.grid(row=ch, column=5, padx=5, pady=5, sticky="snew")
             self.live_voltage_labels[ch] = lv
 
             lc = tk.Label(self.frame, text="0.00 A", fg="blue")
-            lc.grid(row=ch, column=4, padx=5, pady=5)
+            lc.grid(row=ch, column=6, padx=5, pady=5, sticky="snew")
             self.live_current_labels[ch] = lc
 
             btn = tk.Button(self.frame, text=f"Turn CH{ch} ON", state="disabled", command=lambda c=ch: self.toggle_output(c))
@@ -47,35 +47,41 @@ class PSUControlPanel:
             self.output_buttons[ch] = btn
 
         for ch in [2]:
-            tk.Label(self.frame, text=f"CH{ch}").grid(row=ch, column=0, padx=5, pady=5)
+            tk.Label(self.frame, text=f"CH{ch}").grid(row=ch, column=0, padx=5, pady=5, sticky="snew")
 
             ve = tk.Entry(self.frame, width=8)
-            ve.grid(row=ch, column=1, padx=5, pady=5)
+            ve.grid(row=ch, column=1, columnspan=2, padx=5, pady=5, sticky="snew")
             self.voltage_entries[ch] = ve
 
             ce = tk.Entry(self.frame, width=8)
-            ce.grid(row=ch, column=2, padx=5, pady=5)
+            ce.grid(row=ch, column=3, columnspan=2, padx=5, pady=5, sticky="snew")
             self.current_entries[ch] = ce
 
             lv = tk.Label(self.frame, text="0.00 V", fg="blue")
-            lv.grid(row=ch, column=3, padx=5, pady=5)
+            lv.grid(row=ch, column=5, padx=5, pady=5, sticky="snew")
             self.live_voltage_labels[ch] = lv
 
             lc = tk.Label(self.frame, text="0.00 A", fg="blue")
-            lc.grid(row=ch, column=4, padx=5, pady=5)
+            lc.grid(row=ch, column=6, padx=5, pady=5, sticky="snew")
             self.live_current_labels[ch] = lc
 
             btn = tk.Button(self.frame, text=f"Turn CH{ch} ON", state="disabled", command=lambda c=ch: self.toggle_output(c))
-            btn.grid(row=ch+2, column=2, columnspan=2, pady=5, padx=5, sticky="snew")
+            btn.grid(row=ch+2, column=3, columnspan=3, pady=5, padx=5, sticky="snew")
             self.output_buttons[ch] = btn
 
-        tk.Button(self.frame, text="Apply Settings", command=self.apply_settings).grid(row=5, column=2, columnspan=2, sticky="snew", padx=5, pady=5)
+        tk.Button(self.frame, text="Apply Settings", command=self.apply_settings).grid(row=5, column=3, columnspan=3, sticky="snew", padx=5, pady=5)
         tk.Button(self.frame, text="Read Values", command=self.read_values).grid(row=5, column=0, columnspan=2, sticky="snew", padx=5, pady=5)
 
         tk.Button(self.frame, text="Connect", command=self.connect, fg="green").grid(row=6, column=0, columnspan=2, sticky="snew", padx=5, pady=5)
-        tk.Button(self.frame, text="Disconnect", command=self.disconnect, fg="red").grid(row=6, column=2, columnspan=2, sticky="snew", padx=5, pady=5)
+        tk.Button(self.frame, text="Disconnect", command=self.disconnect, fg="red").grid(row=6, column=3, columnspan=3, sticky="snew", padx=5, pady=5)
 
         tk.Label(self.frame, textvariable=self.status_var).grid(row=7, column=0, columnspan=5, sticky="snew", padx=5, pady=5)
+
+        for row in range(8):  # You have 8 rows (0 to 7)
+            self.frame.rowconfigure(row, weight=1)
+
+        for col in range(5):  # You have 5 columns
+            self.frame.columnconfigure(col, weight=1)
 
     def connect(self):
         try:
