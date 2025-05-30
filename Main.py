@@ -1,9 +1,6 @@
 import tkinter as tk
-from tkinter import messagebox
 from cpx400dp import CPX400DP
-from keithleyDMM6500 import DMM6500
 from GUIinterface import GUI
-from PSUcontrol import PSUControlPanel
 
 def main():
     root = tk.Tk()
