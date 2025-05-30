@@ -11,26 +11,52 @@ class STM32:
         self.keep_reading = False
         self.callback = None  # Function to call with received data
 
-    def connect(self):
-        self.serial = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
-        self.keep_reading = True
-        self.read_thread = threading.Thread(target=self._read_loop, daemon=True)
-        self.read_thread.start()
+    def connect_stm32(self):
+        port = self.com_port_var.get()
+        try:
+            self.serial_port = serial.Serial(port, baudrate=115200, timeout=1)
+            self.serial_running = True
+            self.serial_status_var.set(f"STM32: Connected on {port}")
+            self.serial_thread = threading.Thread(target=self.read_from_serial, daemon=True)
+            self.serial_thread.start()
+        except Exception as e:
+            self.serial_status_var.set(f"STM32: Failed to connect ({e})")
 
-    def disconnect(self):
-        self.keep_reading = False
-        if self.serial and self.serial.is_open:
-            self.serial.close()
+    def disconnect_stm32(self):
+        self.serial_running = False
+        if self.serial_port and self.serial_port.is_open:
+            self.serial_port.close()
+            self.serial_status_var.set("STM32: Disconnected")
 
-    def send(self, data: str):
-        if self.serial and self.serial.is_open:
-            self.serial.write(data.encode('utf-8'))
+    def reset_stm32(self):
+        self.send_serial_command("RESET")
 
-    def _read_loop(self):
-        while self.keep_reading and self.serial and self.serial.is_open:
+    def ping_stm32(self):
+        self.send_serial_command("PING")
+
+    def send_serial_command(self, command: str):
+        if self.serial_port and self.serial_port.is_open:
             try:
-                line = self.serial.readline().decode('utf-8').strip()
-                if line and self.callback:
-                    self.callback(line)
+                self.serial_port.write((command + "\n").encode())
+                self.serial_status_var.set(f"Sent: {command}")
             except Exception as e:
-                print(f"Serial read error: {e}")
+                self.serial_status_var.set(f"Failed to send command: {e}")
+        else:
+            self.serial_status_var.set("STM32 not connected")
+
+    def read_from_serial(self):
+        while self.serial_running:
+            try:
+                if self.serial_port.in_waiting > 0:
+                    line = self.serial_port.readline().decode(errors="ignore").strip()
+                    if line:
+                        self.root.after(0, self.log_serial_output, f"[STM32] {line}")
+            except Exception as e:
+                self.root.after(0, self.log_serial_output, f"[Serial Error] {e}")
+                break
+
+    def log_serial_output(self, msg):
+        self.serial_output.config(state="normal")
+        self.serial_output.insert("end", msg + "\n")
+        self.serial_output.see("end")
+        self.serial_output.config(state="disabled")
