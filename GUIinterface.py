@@ -4,7 +4,6 @@ from keithleyDMM6500 import DMM6500
 from PSUcontrol import PSUControlPanel
 from SerialSTM32 import STM32
 import serial
-import threading
 
 class GUI:
     def __init__(self, root, psus: dict, dmm_ip: str = None):
