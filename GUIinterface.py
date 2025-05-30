@@ -1,8 +1,10 @@
 import tkinter as tk
 from tkinter import messagebox
-from cpx400dp import CPX400DP
 from keithleyDMM6500 import DMM6500
 from PSUcontrol import PSUControlPanel
+from SerialSTM32 import STM32
+import serial
+import threading
 
 class GUI:
     def __init__(self, root, psus: dict, dmm_ip: str = None):
@@ -39,6 +41,33 @@ class GUI:
         self.update_live_readings()
         if self.dmm:
             self.update_dmm_readings()
+
+        #stm32 related setup
+        tk.Label(self.root, text="STM32 Serial Control", font=("Arial", 10, "bold")).grid(row=12, column=0, columnspan=4, sticky="nsew", pady=(15, 0))
+
+        self.com_port_var = tk.StringVar()
+        ports = [p.device for p in serial.tools.list_ports.comports()]
+        if ports:
+            self.com_port_var.set(ports[0])
+
+        self.com_menu = tk.OptionMenu(self.root, self.com_port_var, *ports)
+        self.com_menu.grid(row=13, column=0, padx=5, pady=5, sticky="nsew")
+
+        tk.Button(self.root, text="Connect STM32", command=self.connect_stm32).grid(row=13, column=1, padx=5, pady=5, sticky="nsew")
+        tk.Button(self.root, text="Disconnect", command=self.disconnect_stm32).grid(row=13, column=2, padx=5, pady=5, sticky="nsew")
+
+        tk.Button(self.root, text="Reset STM32", command=self.reset_stm32).grid(row=14, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+        tk.Button(self.root, text="Ping", command=self.ping_stm32).grid(row=14, column=2, padx=5, pady=5, sticky="nsew")
+
+        self.serial_status_var = tk.StringVar(value="STM32: Disconnected")
+        tk.Label(self.root, textvariable=self.serial_status_var).grid(row=15, column=0, columnspan=4, sticky="nsew", padx=5, pady=5)
+
+        tk.Button(self.root, text="Clear Output", command=lambda: self.serial_output.config(state="normal") or self.serial_output.delete("1.0", "end") or self.serial_output.config(state="disabled")).grid(row=14, column=0, columnspan=4, sticky="ew", padx=5, pady=(0, 10))
+        tk.Label(self.root, text="STM32 Serial Output", font=("Arial", 10, "bold")).grid(row=12, column=0, columnspan=4, sticky="w", padx=5, pady=(15, 5))
+
+        self.serial_output = tk.Text(self.root, height=6, state="disabled", wrap="word")
+        self.serial_output.grid(row=13, column=0, columnspan=4, sticky="nsew", padx=5, pady=5)
+
 
     def build_dmm_section(self):
         # DMM controls under PSU panels
