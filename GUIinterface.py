@@ -58,7 +58,7 @@ class GUI:
         # Dropdown menu for selecting port
         self.port_combo = ttk.Combobox(self.serial_frame, values=ports, state="readonly")
         self.port_combo.grid(row=0, column=1)
-
+        self.refresh_ports()
         # Select the first port by default if available
         if ports and ports[0] != "No COM ports found":
             self.port_combo.current(0)
@@ -66,16 +66,27 @@ class GUI:
         tk.Button(self.serial_frame, text="Refresh", command=self.refresh_ports).grid(row=0, column=2, padx=5)
 
         # Connect / Disconnect buttons
-        tk.Button(self.serial_frame, text="Connect", command=self.connect_serial).grid(row=0, column=2, padx=5)
-        tk.Button(self.serial_frame, text="Disconnect", command=self.disconnect_serial).grid(row=0, column=3, padx=5)
+        tk.Button(self.serial_frame, text="Connect", command=self.connect_serial).grid(row=0, column=3, padx=5)
+        tk.Button(self.serial_frame, text="Disconnect", command=self.disconnect_serial).grid(row=0, column=4, padx=5)
 
         # Serial output box
         self.serial_output = scrolledtext.ScrolledText(self.serial_frame, height=10, state='disabled')
         self.serial_output.grid(row=1, column=0, columnspan=4, pady=5, sticky="nsew")
 
+        # Serial input box
+        self.input_frame = tk.Frame(self.serial_frame)
+        self.input_frame.grid(row=1, column=2, columnspan=4, pady=5, sticky="nsew")
+
+        self.input_entry = tk.Entry(self.input_frame)
+        self.input_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
+
+        self.send_button = tk.Button(self.input_frame, text="Send", command=self.send_serial_command)
+        self.send_button.pack(side="left")
+
         # Reset button
         self.reset_button = tk.Button(self.serial_frame, text="Reset STM32", command=self.reset_stm32)
         self.reset_button.grid(row=2, column=0, columnspan=4, pady=5)
+        self.reset_button.config(state="disabled")  # Disable until connected
 
         # Poll for serial input
         self.root.after(100, self.poll_serial)
@@ -137,6 +148,7 @@ class GUI:
             try:
                 self.stm32_serial.connect(port=selected_port)
                 self.serial_output_insert(f"Connected to {selected_port}\n")
+                self.reset_button.config(state="normal")  # Enable reset button
             except Exception as e:
                 self.serial_output_insert(f"Connection failed: {e}\n")
         else:
@@ -147,6 +159,7 @@ class GUI:
             self.stm32_serial.disconnect()
             self.stm32_serial = None
             self.log_serial("Disconnected from serial port")
+            self.reset_button.config(state="disabled")  # Disable reset button
 
     def poll_serial(self):
         if self.stm32_serial:
@@ -177,8 +190,17 @@ class GUI:
 
     def refresh_ports(self):
         ports = STM32.list_available_ports()
-        self.port_dropdown['values'] = ports
+        self.port_combo['values'] = ports
         if ports:
-            self.port_dropdown.set(ports[0])  # Auto-select first port
+            self.port_combo.set(ports[0])  # Auto-select first port
         else:
-            self.port_dropdown.set("")
+            self.port_combo.set("")
+    
+    def send_serial_command(self):
+        cmd = self.input_entry.get()
+        if cmd and self.stm32_serial and self.stm32_serial.serial and self.stm32_serial.serial.is_open:
+            self.stm32_serial.write(cmd + "\n")  # add newline or format as needed
+            self.input_entry.delete(0, tk.END)
+        else:
+            # Optionally show error if not connected
+            print("Serial port not connected")

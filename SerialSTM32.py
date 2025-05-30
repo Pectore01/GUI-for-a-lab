@@ -40,6 +40,12 @@ class STM32:
                     break
         threading.Thread(target=loop, daemon=True).start()
 
+    def get_line(self):
+        if self.serial and self.serial.in_waiting > 0:
+            line = self.serial.readline().decode('utf-8').strip()
+            return line
+        return None
+
     @staticmethod
     def list_available_ports():
         import serial.tools.list_ports
