@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import scrolledtext, messagebox, ttk
 from keithleyDMM6500 import DMM6500
 from PSUcontrol import PSUControlPanel
 from SerialSTM32 import STM32
@@ -41,31 +41,44 @@ class GUI:
         if self.dmm:
             self.update_dmm_readings()
 
-        #stm32 related setup
-        tk.Label(self.root, text="STM32 Serial Control", font=("Arial", 10, "bold")).grid(row=12, column=0, columnspan=4, sticky="nsew", pady=(15, 0))
+        # STM32-related setup
+        self.stm32_serial = STM32()  # doesn't auto-select anymore
 
-        self.com_port_var = tk.StringVar()
-        ports = [p.device for p in serial.tools.list_ports.comports()]
-        if ports:
-            self.com_port_var.set(ports[0])
+        # Serial port UI
+        self.serial_frame = tk.LabelFrame(root, text="STM32 Serial")
+        self.serial_frame.grid(row=6, column=0, padx=10, pady=10)
 
-        self.com_menu = tk.OptionMenu(self.root, self.com_port_var, *ports)
-        self.com_menu.grid(row=13, column=0, padx=5, pady=5, sticky="nsew")
+        tk.Label(self.serial_frame, text="Port:").grid(row=0, column=0, sticky="w")
 
-        tk.Button(self.root, text="Connect STM32", command=self.connect_stm32).grid(row=13, column=1, padx=5, pady=5, sticky="nsew")
-        tk.Button(self.root, text="Disconnect", command=self.disconnect_stm32).grid(row=13, column=2, padx=5, pady=5, sticky="nsew")
+        # Get list of available COM ports
+        ports = [port.device for port in serial.tools.list_ports.comports()]
+        if not ports:
+            ports = ["No COM ports found"]
 
-        tk.Button(self.root, text="Reset STM32", command=self.reset_stm32).grid(row=14, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
-        tk.Button(self.root, text="Ping", command=self.ping_stm32).grid(row=14, column=2, padx=5, pady=5, sticky="nsew")
+        # Dropdown menu for selecting port
+        self.port_combo = ttk.Combobox(self.serial_frame, values=ports, state="readonly")
+        self.port_combo.grid(row=0, column=1)
 
-        self.serial_status_var = tk.StringVar(value="STM32: Disconnected")
-        tk.Label(self.root, textvariable=self.serial_status_var).grid(row=15, column=0, columnspan=4, sticky="nsew", padx=5, pady=5)
+        # Select the first port by default if available
+        if ports and ports[0] != "No COM ports found":
+            self.port_combo.current(0)
 
-        tk.Button(self.root, text="Clear Output", command=lambda: self.serial_output.config(state="normal") or self.serial_output.delete("1.0", "end") or self.serial_output.config(state="disabled")).grid(row=14, column=0, columnspan=4, sticky="ew", padx=5, pady=(0, 10))
-        tk.Label(self.root, text="STM32 Serial Output", font=("Arial", 10, "bold")).grid(row=12, column=0, columnspan=4, sticky="w", padx=5, pady=(15, 5))
+        tk.Button(self.serial_frame, text="Refresh", command=self.refresh_ports).grid(row=0, column=2, padx=5)
 
-        self.serial_output = tk.Text(self.root, height=6, state="disabled", wrap="word")
-        self.serial_output.grid(row=13, column=0, columnspan=4, sticky="nsew", padx=5, pady=5)
+        # Connect / Disconnect buttons
+        tk.Button(self.serial_frame, text="Connect", command=self.connect_serial).grid(row=0, column=2, padx=5)
+        tk.Button(self.serial_frame, text="Disconnect", command=self.disconnect_serial).grid(row=0, column=3, padx=5)
+
+        # Serial output box
+        self.serial_output = scrolledtext.ScrolledText(self.serial_frame, height=10, state='disabled')
+        self.serial_output.grid(row=1, column=0, columnspan=4, pady=5, sticky="nsew")
+
+        # Reset button
+        self.reset_button = tk.Button(self.serial_frame, text="Reset STM32", command=self.reset_stm32)
+        self.reset_button.grid(row=2, column=0, columnspan=4, pady=5)
+
+        # Poll for serial input
+        self.root.after(100, self.poll_serial)
 
 
     def build_dmm_section(self):
@@ -117,3 +130,55 @@ class GUI:
                 # You could also log this instead of spamming the status bar
                 print(f"DMM error: {e}")
         self.root.after(1000, self.update_dmm_readings)
+
+    def connect_serial(self):
+        selected_port = self.port_combo.get()
+        if selected_port and "COM" in selected_port:
+            try:
+                self.stm32_serial.connect(port=selected_port)
+                self.serial_output_insert(f"Connected to {selected_port}\n")
+            except Exception as e:
+                self.serial_output_insert(f"Connection failed: {e}\n")
+        else:
+            self.serial_output_insert("No valid COM port selected.\n")
+
+    def disconnect_serial(self):
+        if self.stm32_serial:
+            self.stm32_serial.disconnect()
+            self.stm32_serial = None
+            self.log_serial("Disconnected from serial port")
+
+    def poll_serial(self):
+        if self.stm32_serial:
+            line = self.stm32_serial.get_line()
+            while line:
+                self.log_serial(line)
+                line = self.stm32_serial.get_line()
+        self.root.after(100, self.poll_serial)
+
+    def log_serial(self, text):
+        self.serial_output.configure(state='normal')
+        self.serial_output.insert(tk.END, text + "\n")
+        self.serial_output.see(tk.END)
+        self.serial_output.configure(state='disabled')
+
+    def reset_stm32(self):
+        if self.stm32_serial:
+            self.stm32_serial.write("reset")
+            self.log_serial("Sent reset command")
+        else:
+            messagebox.showwarning("Warning", "Serial port not connected.")
+
+    def serial_output_insert(self, text):
+        self.serial_output.configure(state='normal')
+        self.serial_output.insert(tk.END, text)
+        self.serial_output.configure(state='disabled')
+        self.serial_output.see(tk.END)
+
+    def refresh_ports(self):
+        ports = STM32.list_available_ports()
+        self.port_dropdown['values'] = ports
+        if ports:
+            self.port_dropdown.set(ports[0])  # Auto-select first port
+        else:
+            self.port_dropdown.set("")
