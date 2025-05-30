@@ -46,9 +46,9 @@ class GUI:
 
         # Serial port UI
         self.serial_frame = tk.LabelFrame(root, text="STM32 Serial")
-        self.serial_frame.grid(row=6, column=0, padx=10, pady=10)
+        self.serial_frame.grid(row=6, column=0, padx=10, pady=10, sticky="nsew")
 
-        tk.Label(self.serial_frame, text="Port:").grid(row=0, column=0, sticky="w")
+        tk.Label(self.serial_frame, text="Port:").grid(row=0, column=0, sticky="nsew")
 
         # Get list of available COM ports
         ports = [port.device for port in serial.tools.list_ports.comports()]
@@ -57,17 +57,17 @@ class GUI:
 
         # Dropdown menu for selecting port
         self.port_combo = ttk.Combobox(self.serial_frame, values=ports, state="readonly")
-        self.port_combo.grid(row=0, column=1)
+        self.port_combo.grid(row=0, column=1, padx=5, sticky="nsew")
         self.refresh_ports()
         # Select the first port by default if available
         if ports and ports[0] != "No COM ports found":
             self.port_combo.current(0)
 
-        tk.Button(self.serial_frame, text="Refresh", command=self.refresh_ports).grid(row=0, column=2, padx=5)
+        tk.Button(self.serial_frame, text="Refresh", command=self.refresh_ports).grid(row=0, column=2, padx=5, sticky="nsew")
 
         # Connect / Disconnect buttons
-        tk.Button(self.serial_frame, text="Connect", command=self.connect_serial).grid(row=0, column=3, padx=5)
-        tk.Button(self.serial_frame, text="Disconnect", command=self.disconnect_serial).grid(row=0, column=4, padx=5)
+        tk.Button(self.serial_frame, text="Connect", command=self.connect_serial).grid(row=0, column=3, padx=5, sticky="nsew")
+        tk.Button(self.serial_frame, text="Disconnect", command=self.disconnect_serial).grid(row=0, column=4, padx=5, sticky="nsew")
 
         # Serial output box
         self.serial_output = scrolledtext.ScrolledText(self.serial_frame, height=10, state='disabled')
@@ -85,7 +85,7 @@ class GUI:
 
         # Reset button
         self.reset_button = tk.Button(self.serial_frame, text="Reset STM32", command=self.reset_stm32)
-        self.reset_button.grid(row=2, column=0, columnspan=4, pady=5)
+        self.reset_button.grid(row=2, column=0, columnspan=4, pady=5, sticky="nsew")
         self.reset_button.config(state="disabled")  # Disable until connected
 
         # Poll for serial input
@@ -95,14 +95,14 @@ class GUI:
     def build_dmm_section(self):
         # DMM controls under PSU panels
         row = 1
-        tk.Label(self.root, text="Keithley DMM6500 Readings", font=("Arial", 10, "bold")).grid(row=row, column=0, columnspan=2, pady=(10, 0), sticky="ew", padx=5)
+        tk.Label(self.root, text="Keithley DMM6500 Readings", font=("Arial", 10, "bold")).grid(row=row, column=0, pady=(10, 0), sticky="ns", padx=5)
         row += 2
-        tk.Label(self.root, text="Measure:").grid(row=row, column=0, sticky="nsew", padx=5, pady=5)
+        tk.Label(self.root, text="Measure:").grid(row=row, column=0, sticky="ns", padx=5, pady=5)
         measure_options = ["Voltage", "Resistance", "Continuity"]  # Add Current if supported
         tk.OptionMenu(self.root, self.dmm_measure_mode, *measure_options).grid(row=row, column=1, sticky="nsew", padx=5, pady=5)
         row += 1
         self.dmm_measurement_label = tk.Label(self.root, textvariable=self.dmm_measurement_var, font=("Arial", 12))
-        self.dmm_measurement_label.grid(row=row, column=0, columnspan=2, pady=(5, 0), sticky="nsew", padx=5)
+        self.dmm_measurement_label.grid(row=row, column=0, pady=(5, 0), sticky="ns", padx=5)
 
         # Configure columns and rows for DMM
         self.root.columnconfigure(0, weight=1)
