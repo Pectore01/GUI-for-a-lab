@@ -58,7 +58,7 @@ class GUI:
         tk.Button(input_frame, text="Send", command=self.send_serial_command).pack(side="left")
 
         self.reset_active = False
-        self.reset_button = tk.Button(self.serial_frame, text="Start Auto Reset", command=self.toggle_reset)
+        self.reset_button = tk.Button(self.serial_frame, text="Reset", command=self.toggle_reset)
         self.reset_button.grid(row=3, column=0, columnspan=5, pady=5, sticky="nsew")
         self.reset_button.config(state="disabled")
 
