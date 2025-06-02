@@ -94,6 +94,8 @@ class PSUControlPanel:
 
     def disconnect(self):
         try:
+            for ch in [1, 2]:
+                self.psu.output_off(ch)
             self.psu.disconnect()
             self.status_var.set("Disconnected")
             for btn in self.output_buttons.values():
