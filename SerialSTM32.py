@@ -1,52 +1,49 @@
 import serial
-import threading
 import serial.tools.list_ports
+import threading
+import queue
 
 class STM32:
     def __init__(self):
         self.serial = None
-        self.read_callback = None
+        self.rx_queue = queue.Queue()
+        self.rx_thread = None
+        self.running = False
 
-    def connect(self, port, baudrate=9600, timeout=1):
-        import serial
+    def connect(self, port, baudrate=9600, timeout=0.1):
         self.serial = serial.Serial(port, baudrate, timeout=timeout)
+        self.running = True
+        self.rx_thread = threading.Thread(target=self._read_serial, daemon=True)
+        self.rx_thread.start()
 
     def disconnect(self):
+        self.running = False
         if self.serial and self.serial.is_open:
             self.serial.close()
-            self.serial = None
+        self.serial = None
 
-    def write(self, data: str):
+    def write(self, data):
         if self.serial and self.serial.is_open:
-            self.serial.write((data + '\n').encode('utf-8'))
-
-    def read(self):
-        if self.serial and self.serial.is_open:
-            return self.serial.readline().decode('utf-8').strip()
-        return ""
-
-    def set_read_callback(self, callback):
-        self.read_callback = callback
-
-    def start_reading(self):
-        import threading
-        def loop():
-            while self.serial and self.serial.is_open:
-                try:
-                    line = self.serial.readline().decode('utf-8').strip()
-                    if line and self.read_callback:
-                        self.read_callback(line)
-                except:
-                    break
-        threading.Thread(target=loop, daemon=True).start()
+            if not isinstance(data, bytes):
+                data = data.encode('utf-8')
+            self.serial.write(data)
 
     def get_line(self):
-        if self.serial and self.serial.in_waiting > 0:
-            line = self.serial.readline().decode('utf-8').strip()
-            return line
-        return None
+        try:
+            return self.rx_queue.get_nowait()
+        except queue.Empty:
+            return None
+
+    def _read_serial(self):
+        while self.running and self.serial and self.serial.is_open:
+            try:
+                line = self.serial.readline()
+                if line:
+                    decoded = line.decode(errors='replace').strip()
+                    self.rx_queue.put(decoded)
+            except Exception:
+                pass  # Optional: log errors here
 
     @staticmethod
     def list_available_ports():
-        import serial.tools.list_ports
         return [port.device for port in serial.tools.list_ports.comports()]
