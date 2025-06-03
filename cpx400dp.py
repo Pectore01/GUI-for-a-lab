@@ -6,8 +6,14 @@ class CPX400DP(PowerSupplyInterface):
     def __init__(self, ip: str, port: int = 9221):
         self.ip = ip
         self.port = port
-        self.name = f"CPX400DP-{ip}"  # Add this line
+       
         self.socket = None
+        if "192.168.0.103" in ip:
+            self.name = f"CPX400DP Right {ip}"  # Add this line
+        elif "192.168.0.105" in ip:
+            self.name = f"CPX400DP Left {ip}"  # Add this line
+        else:
+            self.name = f"CPX400DP-{ip}"  # Add this line
 
     def connect(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

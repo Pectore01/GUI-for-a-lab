@@ -28,10 +28,12 @@ class PSUControlPanel:
 
             ve = tk.Entry(self.frame, width=8)
             ve.grid(row=ch, column=1, columnspan=2, padx=5, pady=5, sticky="snew")
+            ve.insert(0, "0") 
             self.voltage_entries[ch] = ve
 
             ce = tk.Entry(self.frame, width=8)
             ce.grid(row=ch, column=3, columnspan=2, padx=5, pady=5, sticky="snew")
+            ce.insert(0, "0")
             self.current_entries[ch] = ce
 
             lv = tk.Label(self.frame, text="0.00 V", fg="blue")
@@ -51,10 +53,12 @@ class PSUControlPanel:
 
             ve = tk.Entry(self.frame, width=8)
             ve.grid(row=ch, column=1, columnspan=2, padx=5, pady=5, sticky="snew")
+            ve.insert(0, "0") 
             self.voltage_entries[ch] = ve
 
             ce = tk.Entry(self.frame, width=8)
             ce.grid(row=ch, column=3, columnspan=2, padx=5, pady=5, sticky="snew")
+            ce.insert(0, "0")
             self.current_entries[ch] = ce
 
             lv = tk.Label(self.frame, text="0.00 V", fg="blue")
@@ -114,13 +118,36 @@ class PSUControlPanel:
 
     def apply_settings(self):
         try:
-            for ch in [1, 2]:
-                voltage = float(self.voltage_entries[ch].get())
-                current = float(self.current_entries[ch].get())
+            for ch in [1]:
+                v_str = self.voltage_entries[ch].get()
+                c_str = self.current_entries[ch].get()
+
+                if not v_str or not c_str:
+                    raise ValueError(f"CH{ch}: Voltage or current field is empty.")
+
+                voltage = float(v_str)
+                current = float(c_str)
+
                 self.psu.set_voltage(ch, voltage)
                 self.psu.set_current(ch, current)
+            for ch in [2]:
+                v_str = self.voltage_entries[ch].get()
+                c_str = self.current_entries[ch].get()
+
+                if not v_str or not c_str:
+                    raise ValueError(f"CH{ch}: Voltage or current field is empty.")
+
+                voltage = float(v_str)
+                current = float(c_str)
+
+                self.psu.set_voltage(ch, voltage)
+                self.psu.set_current(ch, current)
+
+            messagebox.showinfo("Settings Applied", "Voltage and current set successfully.")
+        except ValueError as ve:
+            messagebox.showerror("Input Error", f"Invalid input: {ve}")
         except Exception as e:
-            messagebox.showerror("Input Error", str(e))
+            messagebox.showerror("Error", f"Failed to apply settings: {e}")
 
     def read_values(self):
         try:
