@@ -6,8 +6,8 @@ def main():
     root = tk.Tk()
 
     # Create PSU instances (use actual IPs or mock)
-    psuL = CPX400DP("192.168.0.103")
-    psuR = CPX400DP("192.168.0.105")
+    psuL = CPX400DP("192.168.0.105")
+    psuR = CPX400DP("192.168.0.103")
     dmm_ip = "192.168.0.104"
     # ✅ Define the psus dictionary
     psus = {
