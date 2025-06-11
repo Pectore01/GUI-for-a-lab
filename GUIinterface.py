@@ -190,7 +190,7 @@ class GUI:
     def send_serial_command(self):
         cmd = self.input_entry.get()
         if cmd and self.stm32_serial.serial and self.stm32_serial.serial.is_open:
-            self.stm32_serial.write(cmd + "\r\n")
+            self.stm32_serial.write(f + cmd + "\r\n")
             self.input_entry.delete(0, tk.END)
         else:
             self.log_serial("Not connected to STM32")
