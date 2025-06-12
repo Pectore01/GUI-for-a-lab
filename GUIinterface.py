@@ -3,13 +3,17 @@ from tkinter import scrolledtext, messagebox, ttk
 from keithleyDMM6500 import DMM6500
 from PSUcontrol import PSUControlPanel
 from SerialSTM32 import STM32
-import time
+from chroma_load import ChromaLoad
+import threading
+
+MODES = ["CCL", "CCH", "CCDL", "CCDH", "CRL", "CRH", "CV"]
 
 class GUI:
     def __init__(self, root, psus: dict, dmm_ip: str = None):
         self.root = root
         self.psus = psus  # {"PSU 1": CPX400DP, "PSU 2": CPX400DP}
         self.stm32_serial = STM32()
+        self.chroma = ChromaLoad(ip="192.168.0.10", port=5000)
 
         self.root.title("Service tools for PCBA")
         self.root.resizable(True, True)
@@ -17,6 +21,9 @@ class GUI:
         self.build_psu_panels()   
         self.build_dmm_section(dmm_ip)
         self.build_serial_section()
+        self.build_chroma_section()
+
+        
 
         self.update_live_readings()
         self.root.after(100, self.poll_serial)
@@ -123,6 +130,36 @@ class GUI:
                 print(f"DMM error: {e}")
             self.root.after(1000, self.update_dmm_readings)
 
+    def build_chroma_section(self, ip="192.168.0.10", port=5000):
+        self.chroma = ChromaLoad(ip, port)
+        chroma_frame = tk.LabelFrame(self.root, text="Chroma Load Control")
+        chroma_frame.grid(row=7, column=0, columnspan=2, padx=10, pady=10, sticky="nsew")
+
+        row = 0
+        def btn(text, cmd):
+            nonlocal row
+            b = tk.Button(chroma_frame, text=text, width=30, command=cmd)
+            b.grid(row=row, column=0, pady=2, sticky="ew")
+            row += 1
+
+        btn("Enable Remote Mode", self.remote_on)
+        btn("Disnable Remote Mode", self.remote_off)
+#        btn("Select Channel 3", self.select_channel)
+#        btn("Set Voltage Range HIGH", self.set_range)
+#        btn("Set Mode to CCH", self.set_mode)
+#        btn("Set Static Current to 10A", self.set_current)
+#        btn("Set Slew Rate (Rise/Fall)", self.set_slew)
+#        btn("Turn Load ON", self.load_on)
+        btn("Turn all Load ON", self.set_allloads_on)
+        btn("Turn Load OFF", self.load_off)
+        btn("Initialize & Turn Load ON", self.initialize_and_turn_on_load)
+        btn("Measure Voltage", self.measure_voltage)
+        btn("Measure Current", self.measure_current)
+
+        self.output = tk.Text(chroma_frame, height=10, width=50, state='disabled')
+        self.output.grid(row=row, column=0, pady=5, sticky="nsew")
+        chroma_frame.columnconfigure(0, weight=1)
+
     def connect_serial(self):
         port = self.port_combo.get()
         if "COM" in port:
@@ -196,3 +233,80 @@ class GUI:
             self.log_serial("Not connected to STM32")
         print(f"Sending command: {cmd}")
         self.log_serial(f">>> {cmd}")
+
+
+    def log(self, text):
+        self.output.configure(state='normal')
+        self.output.insert(tk.END, text + "\n")
+        self.output.see(tk.END)
+        self.output.configure(state='disabled')
+
+    def remote_on(self):
+        self.chroma.remote_on()
+        self.log("Remote mode enabled")
+    
+    def remote_off(self):
+        self.chroma.load_off()
+        self.log("Load turned OFF")        
+        self.chroma.remote_off()
+        self.log("Remote mode disabled")
+
+    def select_channel(self):
+        self.chroma.select_channel(3)
+        self.log("Channel 3 selected and display turned on")
+
+    def set_range(self):
+        self.chroma.set_voltage_range_high()
+        self.log("Voltage range set to HIGH")
+
+    def set_allloads_on(self):
+        self.chroma.set_run()
+        self.log("Turn on all loads")
+
+    def set_mode(self):
+        self.chroma.set_mode_cch()
+        self.log("Mode set to CCH (CC High Range)")
+
+    def set_current(self):
+        self.chroma.set_static_current(10)
+        self.log("Current set to 10 A")
+
+    def set_slew(self):
+        self.chroma.set_slew_rate("1.5", "1.5")
+        self.log("Slew rate set to 1.5 A/µS (rise/fall)")
+
+    def load_on(self):
+        self.chroma.load_on()
+        self.log("Load turned ON")
+
+    def load_off(self):
+        self.chroma.load_off()
+        self.log("Load turned OFF")
+
+    def measure_voltage(self):
+        val = self.chroma.measure_voltage()
+        self.log(f"Measured Voltage: {val} V")
+
+    def measure_current(self):
+        val = self.chroma.measure_current()
+        self.log(f"Measured Current: {val} A")
+
+    def initialize_and_turn_on_load(self):
+        def task():
+            try:
+                self.log("Initializing Chroma Load...")
+                self.chroma.remote_on()
+                self.log("Remote mode enabled.")
+                self.chroma.select_channel(3)
+                self.log("Channel 3 selected.")
+                self.chroma.set_mode_cch()
+                self.log("Mode set to CCH.")
+                self.chroma.set_static_current(1)
+                self.log("Static current set to 1 A.")
+                self.chroma.set_slew_rate("0.5", "0.5")
+                self.log("Slew rate rise/fall set to 0.5 A/µS.")
+                self.chroma.load_on()
+                self.log("Load turned ON.")
+            except Exception as e:
+                self.log(f"Failed to initialize: {e}")
+        threading.Thread(target=task).start()
