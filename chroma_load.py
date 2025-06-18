@@ -42,7 +42,7 @@ class ChromaLoad:
 
     def load_on(self):
         return self.send_command("LOAD:STATe ON", expect_response=False)
-
+        
     def load_off(self):
         return self.send_command("LOAD:STATe OFF", expect_response=False)
 
@@ -51,3 +51,7 @@ class ChromaLoad:
 
     def measure_current(self):
         return self.send_command("MEAS:CURR?", expect_response=True)
+    
+    def check_load_status(self):
+        response = self.send_command("LOAD:STATe?", expect_response=True)
+        return response.strip() in ["1"]
