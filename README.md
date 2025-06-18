@@ -8,3 +8,11 @@ Unlike most setups which use serial communication this projected opted for ether
 ## Authors
 
 - [@Stan v Rijt](https://github.com/Pectore01)
+
+## Used sources
+For this project I have used many sources most are opensource and need to be installed
+- STK500 (used adpated version to work with specific files.)
+- Tkinter
+- Socket
+- Any library that was used within any of the libraries i used. 
+
