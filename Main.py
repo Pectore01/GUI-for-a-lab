@@ -1,7 +1,6 @@
 import tkinter as tk
 from cpx400dp import CPX400DP
 from GUIinterface import GUI
-from chroma_load import ChromaLoad
 
 def main():
     root = tk.Tk()
